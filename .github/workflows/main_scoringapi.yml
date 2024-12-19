@@ -68,11 +68,20 @@ jobs:
       - name: Unzip artifact for deployment
         run: unzip release.zip
 
+      - name: Login to Azure
+        uses: azure/login@v2
+        with:
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_194DB17072E246F780FD50A03F917E73 }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_EA10015663A54AE983E04049D4E9A777 }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_D08B1D015F55464094C6F6A4E0DC932C }}
 
       - name: 'Deploy to Azure Web App'
         uses: azure/webapps-deploy@v3
         id: deploy-to-webapp
         with:
-          app-name: 'APItestScoring'
+          app-name: 'ScoringAPi'
           slot-name: 'Production'
-          publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_827F0300302044BFBE6ECBBB80A5AD1C }}
+        # with:
+        #   app-name: 'APItestScoring'
+        #   slot-name: 'Production'
+        #   publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_827F0300302044BFBE6ECBBB80A5AD1C }}
