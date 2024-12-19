@@ -10,8 +10,10 @@ from sklearn.preprocessing import MinMaxScaler
 import streamlit.components.v1 as components
 
 
-API_URL = "http://127.0.0.1:8000/predict"
+# API_URL = "http://127.0.0.1:8000/predict"
 # API_URL = "https://apitestscoring-bre0d5dbasdsewhw.francecentral-01.azurewebsites.net/predict"
+API_URL = "https://scoringapi-ewckf3cxfrdbadhw.northeurope-01.azurewebsites.net/predict"
+
 MODEL_FILE = 'model_LGBM_Tuned_500cols.pkl'
 
 def request_prediction(url, data):
