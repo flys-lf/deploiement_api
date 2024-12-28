@@ -1,6 +1,3 @@
-#--------------------------------------------------------
-# Vous exposerez votre modèle de prédiction sous forme d’une API qui permet de calculer la probabilité de défaut du client, 
-# ainsi que sa classe (accepté ou refusé) en fonction du seuil optimisé d’un point de vue métier.
 
 # FAST API
 import pickle
@@ -8,7 +5,7 @@ import uvicorn
 from fastapi import FastAPI, Request
 import pandas as pd
 
-MODEL_FILE = 'model_LGBM_Tuned_500cols.pkl'
+MODEL_FILE = 'model_LGBM.pkl'
 model = pickle.load(open(f"{MODEL_FILE}", "rb"))
 
 app = FastAPI()
@@ -23,8 +20,10 @@ async def predict(request: Request):
     df = pd.DataFrame.from_dict(result)
     
     # Use the loaded model to make predictions on the DataFrame
-    prediction = model.predict(df)
+    # prediction = model.predict(df)
+    prediction = (model.predict_proba(df)[:,1] >= 0.52).astype(float) # utilisation du seuil optimal
     probability = model.predict_proba(df)
+    
     print(prediction)
     print(probability)
 

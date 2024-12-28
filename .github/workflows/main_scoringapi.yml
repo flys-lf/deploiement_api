@@ -83,7 +83,3 @@ jobs:
         with:
           app-name: 'ScoringAPi'
           slot-name: 'Production'
-        # with:
-        #   app-name: 'APItestScoring'
-        #   slot-name: 'Production'
-        #   publish-profile: ${{ secrets.AZUREAPPSERVICE_PUBLISHPROFILE_827F0300302044BFBE6ECBBB80A5AD1C }}
