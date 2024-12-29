@@ -10,7 +10,6 @@ from sklearn.preprocessing import MinMaxScaler
 import streamlit.components.v1 as components
 import plotly.graph_objects as go
 
-# API_URL = "http://127.0.0.1:8000/predict"
 API_URL = "https://scoringapi-ewckf3cxfrdbadhw.northeurope-01.azurewebsites.net/predict"
 
 MODEL_FILE = 'model_LGBM.pkl'
@@ -76,7 +75,6 @@ st.set_page_config(
     layout="wide"
 )
 
-# st.image("images/banner.jpg")
 st.title("Scoring Client 🎖️")
 
 df, df_scaled_with_id, df_application_test = read_and_scale_data()
@@ -171,143 +169,6 @@ if not df.empty :
                                 font={'color': 'black', 'family': 'Calibri'},
                                 margin=dict(l=0, r=0, b=0, t=0, pad=0))
         st.plotly_chart(fig, use_container_width=True)
-
-        #=============================================================#
-        # Comparaison du profil du client à son groupe d'appartenance #
-        #=============================================================#
-        # feats = [f for f in df.columns if f not in ['TARGET','SK_ID_CURR','SK_ID_BUREAU','SK_ID_PREV','index']]
-        # df_shap = df_scaled_with_id[feats]
-        # explainer, shap_values = compute_shap_values()
-
-        # df_scaled = df_scaled_with_id[feats]
-
-        # # Lecture des probas pour tout le df
-        # model = pickle.load(open(f"{MODEL_FILE}", "rb"))
-        # prediction = (model.predict_proba(df_scaled)[:,1] >= 0.52).astype(float) # utilisation du seuil optimal
-        # probability = model.predict_proba(df_scaled)
-        # prediction_df = pd.DataFrame(prediction, columns=['y_pred'])
-        # probability_df = pd.DataFrame(probability, columns=['proba_classe_0', 'proba_classe_1'])
-
-        # proba = round(probability_df["proba_classe_1"][0]*100, 2)
-        # prediction = round(prediction_df["y_pred"][0])
-        # prediction_df["decision"] = np.where(prediction_df.y_pred ==1, "Refusé", "Accordé")
-
-        
-
-        # # Titre 1
-        # st.markdown("""
-        #             <br>
-        #             <h1 style="color:#772b58;font-size:2.3em;font-style:italic;font-weight:700;margin:0px;">
-        #             2. Comparaison du profil du client à celui des clients dont la probabilité de défaut de paiement est proche</h1>
-        #             """, 
-        #             unsafe_allow_html=True)
-        # st.write("Pour la définition des groupes de clients, faites défiler la page vers le bas.")
-
-        # # Calcul des valeurs Shap
-        # explainer_shap = shap.TreeExplainer(model)
-        # st.write(shap_values[1])
-        # # shap_values = explainer_shap.shap_values(df_shap)
-        # shap_values_df = pd.DataFrame(data=shap_values, columns=df_shap.columns)
-        # st.dataframe(shap_values_df.head(5))
-
-
-        # df_groupes = pd.concat([probability_df['proba_classe_1'], shap_values_df], axis=1)
-        # st.dataframe(df_groupes.head(5))
-
-        # df_groupes['typologie_clients'] = pd.qcut(df_groupes.proba_classe_1,
-        #                                             q=5,
-        #                                             precision=1,
-        #                                             labels=['20%_et_moins',
-        #                                                     '21%_30%',
-        #                                                     '31%_40%',
-        #                                                     '41%_60%',
-        #                                                     '61%_et_plus'])
-
-        # # Titre H2
-        # st.markdown("""
-        #             <h2 style="color:#418b85;text-align:left;font-size:1.8em;font-style:italic;font-weight:700;margin:0px;">
-        #             Comparaison de “la trajectoire” prise par la prédiction du client à celles des groupes de Clients</h2>
-        #             """, 
-        #             unsafe_allow_html=True)
-        # st.write("")
-
-        # # Moyenne des variables par classe
-        # df_groupes_mean = df_groupes.groupby(['typologie_clients']).mean()
-        # df_groupes_mean = df_groupes_mean.rename_axis('typologie_clients').reset_index()
-
-        # st.dataframe(df_groupes_mean)
-        # df_groupes_mean["index"]=[1,2,3,4, 5]
-        # df_groupes_mean.set_index('index', inplace = True)
-
-        # # récupération de l'index correspondant à l'identifiant du client
-        # # idx = int(lecture_X_test_clean()[lecture_X_test_clean()['sk_id_curr']==ID_client].index[0])
-        # idx = int(df_scaled_with_id[df_scaled_with_id['SK_ID_CURR']==id_client].index[0])
-
-        # # dataframe avec shap values du client et des 5 groupes de clients
-        # comparaison_client_groupe = pd.concat([df_groupes[df_groupes.index == idx],
-        #                                         df_groupes_mean],
-        #                                         axis = 0)
-        # comparaison_client_groupe['typologie_clients'] = np.where(comparaison_client_groupe.index == idx,
-        #                                                         df_scaled_with_id.iloc[idx, 0],
-        #                                                         comparaison_client_groupe['typologie_clients'])
-        # # transformation en array
-        # nmp = comparaison_client_groupe.drop(
-        #                     labels=['typologie_clients', "proba_classe_1"], axis=1).to_numpy()
-
-        # fig = plt.figure(figsize=(8, 20))
-        # shap.decision_plot(explainer_shap.expected_value[0], 
-        #                             nmp, 
-        #                             feature_names=comparaison_client_groupe.drop(
-        #                                             labels=['typologie_clients', "proba_classe_1"], axis=1).columns.to_list(),
-        #                             feature_order='importance',
-        #                             highlight=0,
-        #                             legend_labels=['Client', '20%_et_moins', '21%_30%', '31%_40%', '41%_60%', '61%_et_plus'],
-        #                             plot_color='inferno_r',
-        #                             legend_location='center right',
-        #                             feature_display_range=slice(None, -57, -1),
-        #                             link='logit')
-        # # st_shap(shap.decision_plot(explainer_shap.expected_value[0], 
-        # #                             nmp, 
-        # #                             feature_names=comparaison_client_groupe.drop(
-        # #                                             labels=['typologie_clients', "proba_classe_1"], axis=1).columns.to_list(),
-        # #                             feature_order='importance',
-        # #                             highlight=0,
-        # #                             legend_labels=['Client', '20%_et_moins', '21%_30%', '31%_40%', '41%_60%', '61%_et_plus'],
-        # #                             plot_color='inferno_r',
-        # #                             legend_location='center right',
-        # #                             feature_display_range=slice(None, -57, -1),
-        # #                             link='logit'))
-
-        # # Titre H2
-        # st.markdown("""
-        #             <h2 style="color:#418b85;text-align:left;font-size:1.8em;font-style:italic;font-weight:700;margin:0px;">
-        #             Constitution de groupes de clients selon leur probabilité de défaut de paiement</h2>
-        #             """, 
-        #             unsafe_allow_html=True)
-        # st.write("")
-
-        # col1, col2 = st.columns(2)
-        # with col1:
-        #     fig1, ax1 = plt.subplots(figsize=(8, 6))
-        #     plot_countplot(df=df_groupes, 
-        #                 col='typologie_clients', 
-        #                 order=False,
-        #                 palette='rocket_r', ax=ax1, orient='v', size_labels=12)
-        #     plt.title("Regroupement des Clients selon leur Probabilité de Défaut de Paiement\n",
-        #             loc="center", fontsize=16, fontstyle='italic', fontname='Roboto Condensed')
-        #     fig1.tight_layout()
-        #     st.pyplot(fig1)
-        # with col2:
-        #     fig2, ax2 = plt.subplots(figsize=(8, 6))
-        #     plot_aggregation(df=df_groupes,
-        #                 group_col='typologie_clients',
-        #                 value_col='proba_classe_1',
-        #                 aggreg='mean',
-        #                 palette="rocket_r", ax=ax2, orient='v', size_labels=12)
-        #     plt.title("Probabilité Moyenne de Défaut de Paiement par Groupe de Clients\n",
-        #             loc="center", fontsize=16, fontstyle='italic', fontname='Roboto Condensed')
-        #     fig2.tight_layout()
-        #     st.pyplot(fig2)
 
     #======================#
     # Analyse des Features #
