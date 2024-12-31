@@ -10,6 +10,8 @@ import seaborn as sns
 from sklearn.preprocessing import MinMaxScaler
 import streamlit.components.v1 as components
 import plotly.graph_objects as go
+import io
+import base64
 
 API_URL = "https://scoringapi-ewckf3cxfrdbadhw.northeurope-01.azurewebsites.net/predict"
 
@@ -68,18 +70,23 @@ def plot_shap_values(values_shap, shap_df, type = None, sort = None):
     st.pyplot(fig)
 
 @st.cache_resource(hash_funcs={plt.figure: lambda _: None})
-def comparison_chart(df, id, feature):
-    plot = sns.displot(
-        data=df, x=feature, color = 'black',
-        facet_kws=dict(sharey=False, sharex=False)
-    )
-    def specs(x, **kwargs):
-        value_client = df.loc[df['SK_ID_CURR']==id, feature].iloc[0]
-        plt.axvline(x.mean(), c='pink', ls='--', lw=2.5, label=f"Moyenne : {round(x.mean(),1)}")
-        plt.axvline(value_client, c='red', ls='--', lw=2.5, label=f"Client N°{id} : {value_client}")
-        plt.legend(loc='upper right')
-        plt.show()
-    plot.map(specs, feature)
+def comparison_chart(df, id_client, feature):
+    fig, ax = plt.subplots()
+    sns.histplot(df, x=feature, color='black')
+    mean = df[feature].mean()
+    value_client = df.loc[df['SK_ID_CURR']==id_client, feature].iloc[0]
+
+    ax.axvline(int(value_client), color="red", linestyle='--',linewidth=2, label =f'Client N° {int(id_client)}: {value_client}')
+    ax.axvline(int(mean), color="orange", linestyle='--',linewidth=2, label ='Moyenne : %d'%mean)
+    ax.set(title='Distribution %s' % feature, ylabel='')
+    plt.legend()
+
+    buffer = io.BytesIO()
+    fig.savefig(buffer, format='png', bbox_inches='tight')
+    buffer.seek(0)
+    image_base64 = base64.b64encode(buffer.getvalue())
+    image = base64.b64decode(image_base64)
+    return st.image(image)
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
 st.set_page_config(
@@ -90,6 +97,7 @@ st.set_page_config(
 )
 
 st.title("Scoring Client 🎖️")
+st.sidebar.image('images/logo.jpg', use_container_width=True)
 
 df, df_scaled_with_id, df_application_test = read_and_scale_data()
 
@@ -99,47 +107,43 @@ if not df.empty :
         st.dataframe(df_scaled_with_id.head(5))
         st.dataframe(df_application_test.head(5))
 
-    #===========================#
-    # Prédiction Scoring Client #
-    #===========================#
-
+    # Selection ID client
     liste_clients = list(df['SK_ID_CURR'])
     col1, col2, col3 = st.columns(3)
     with col1:
         id_client = st.selectbox("Veuillez sélectionner le numéro de votre client à l'aide du menu déroulant :",
                                 (liste_clients))
-        st.write(f"Vous avez sélectionné l'identifiant N° : **{id_client}**")
+        st.write(f"Vous avez sélectionné l'identifiant N° : **{int(id_client)}**")
 
-
-    with st.expander("Fiche Client 📑"):
-        st.write(f"**Client N° {id_client}**")
+    # Fiche Client
+    with st.sidebar:
+        st.write(f"**FICHE CLIENT N° {int(id_client)}** 📑")
         infos_client = df_application_test.loc[df_application_test['SK_ID_CURR']==id_client, ]
-        col1, col2 = st.columns(2)
-        with col1:
-             st.write("Informations Client ------------")
-             st.write("**Sexe :**", infos_client['CODE_GENDER'].iloc[0])
-             st.write("**Age :**", round(abs(infos_client['DAYS_BIRTH'].iloc[0]/365)))
-             st.write('**Statut :**', infos_client['NAME_FAMILY_STATUS'].iloc[0])
-             st.write("**Nombre d'enfants :**", infos_client['CNT_CHILDREN'].iloc[0])
-             st.write("**Revenu total :**", infos_client['AMT_INCOME_TOTAL'].iloc[0],"$")
-             st.write("**Niveau d'éducation :**", infos_client['NAME_EDUCATION_TYPE'].iloc[0])
-             st.write("**Occupation :**", infos_client['OCCUPATION_TYPE'].iloc[0])
-             
+        st.write(" ")
 
-        with col2:
-            st.write("Informations Crédit ------------")
-            st.write("**Type Contrat :**", infos_client['NAME_CONTRACT_TYPE'].iloc[0])
-            st.write("**Montant du crédit :**", infos_client['AMT_CREDIT'].iloc[0])
-            st.write("**Montant du crédit annuel :**", infos_client['AMT_ANNUITY'].iloc[0])
-            st.write("**Ratio crédit sur revenu :**", infos_client['AMT_INCOME_TOTAL'].iloc[0]/infos_client['AMT_CREDIT'].iloc[0])
+        st.write("**Informations Client ============================**")
+        st.write("**Sexe :**", infos_client['CODE_GENDER'].iloc[0])
+        st.write("**Age :**", round(abs(infos_client['DAYS_BIRTH'].iloc[0]/365)))
+        st.write('**Statut :**', infos_client['NAME_FAMILY_STATUS'].iloc[0])
+        st.write("**Nombre d'enfants :**", infos_client['CNT_CHILDREN'].iloc[0])
+        st.write("**Revenu total :**", infos_client['AMT_INCOME_TOTAL'].iloc[0],"$")
+        st.write("**Niveau d'éducation :**", infos_client['NAME_EDUCATION_TYPE'].iloc[0])
+        st.write("**Occupation :**", infos_client['OCCUPATION_TYPE'].iloc[0])
 
-        
+        st.write("**Informations Crédit ============================**")
+        st.write("**Type Contrat :**", infos_client['NAME_CONTRACT_TYPE'].iloc[0])
+        st.write("**Montant du crédit :**", infos_client['AMT_CREDIT'].iloc[0])
+        st.write("**Montant du crédit annuel :**", infos_client['AMT_ANNUITY'].iloc[0])
+        st.write("**Ratio crédit sur revenu :**", infos_client['AMT_INCOME_TOTAL'].iloc[0]/infos_client['AMT_CREDIT'].iloc[0])
+
         st.dataframe(infos_client)
 
+    #===========================#
+    # Prédiction Scoring Client #
+    #===========================#
     feats = [f for f in df.columns if f not in ['TARGET','SK_ID_CURR','SK_ID_BUREAU','SK_ID_PREV','index']]
     df_scaled_filtered = df_scaled_with_id.loc[df_scaled_with_id['SK_ID_CURR']==id_client, feats]
 
-    # Prédiction
     predict_button = st.button('Prédire')
     if predict_button:
         prediction_df, proba_df = request_prediction(API_URL, data = df_scaled_filtered)
@@ -148,7 +152,7 @@ if not df.empty :
             proba = round(proba_df["proba_classe_1"][0]*100, 2)
             prediction = round(prediction_df["y_pred"][0])
             prediction_df["decision"] = np.where(prediction_df.y_pred ==1, "Refusé", "Accordé")
-            st.write(f"Le client **N° {id_client}** a une probabilité de défaut de paiement estimé à : **{proba}%**")
+            st.write(f"Le client **N° {int(id_client)}** a une probabilité de défaut de paiement estimé à : **{proba}%**")
             decision = prediction_df["decision"][0]
             if decision == "Accordé" :
                 st.success(f"Crédit {decision}")
@@ -184,15 +188,19 @@ if not df.empty :
                                 margin=dict(l=0, r=0, b=0, t=0, pad=0))
         st.plotly_chart(fig, use_container_width=True)
 
-        # if st.checkbox('**Comparer le client avec les autres clients**'):
-        #     feature_name = st.selectbox('Sélectionner un paramètre :', [
-        #         "AMT_INCOME_TOTAL",
-        #         "DAYS_EMPLOYED",
-        #         "REGION_POPULATION_RELATIVE",
-        #         "DAYS_BIRTH",
-        #         "AMT_CREDIT"])
-        #     comparison_chart(df=df, id=id_client, feature=feature_name)
-            
+    #====================#
+    # Comparaison Client #
+    #====================#
+    st.divider()
+    st.header("Comparaison Client avec les autres clients")
+    feature_name = st.selectbox('Sélectionner un paramètre :', [
+        "DAYS_BIRTH",
+        "AMT_CREDIT",
+        "DAYS_EMPLOYED",
+        "AMT_INCOME_TOTAL",
+        ])
+    
+    comparison_chart(df=df, id_client=id_client, feature=feature_name)
 
     #======================#
     # Analyse des Features #
@@ -207,7 +215,7 @@ if not df.empty :
     explainer, shap_values = compute_shap_values()
 
     # Explication Locale --------------------------------------------------------------------------------------------------------------
-    st.subheader(f"Explication Locale Client N°{id_client}")
+    st.subheader(f"Explication Locale Client N°{int(id_client)}")
     # récupération de l'index correspondant à l'identifiant du client
     idx_selected = int(df_scaled_with_id[df_scaled_with_id['SK_ID_CURR']==id_client].index[0])
     # visualize the first prediction's explanation (use matplotlib=True to avoid Javascript)
