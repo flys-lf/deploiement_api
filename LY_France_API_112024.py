@@ -9,6 +9,7 @@ MODEL_FILE = 'model_LGBM.pkl'
 model = pickle.load(open(f"{MODEL_FILE}", "rb"))
 
 app = FastAPI()
+API_URL = "https://scoringapi-ewckf3cxfrdbadhw.northeurope-01.azurewebsites.net/predict"
 
 @app.get('/')
 def index():

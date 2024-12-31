@@ -6,6 +6,7 @@ import streamlit as st
 import requests
 import matplotlib.pyplot as plt
 import shap
+import seaborn as sns
 from sklearn.preprocessing import MinMaxScaler
 import streamlit.components.v1 as components
 import plotly.graph_objects as go
@@ -66,6 +67,19 @@ def plot_shap_values(values_shap, shap_df, type = None, sort = None):
     shap.summary_plot(values_shap, shap_df, plot_type=type, sort = sort)
     st.pyplot(fig)
 
+@st.cache_resource(hash_funcs={plt.figure: lambda _: None})
+def comparison_chart(df, id, feature):
+    plot = sns.displot(
+        data=df, x=feature, color = 'black',
+        facet_kws=dict(sharey=False, sharex=False)
+    )
+    def specs(x, **kwargs):
+        value_client = df.loc[df['SK_ID_CURR']==id, feature].iloc[0]
+        plt.axvline(x.mean(), c='pink', ls='--', lw=2.5, label=f"Moyenne : {round(x.mean(),1)}")
+        plt.axvline(value_client, c='red', ls='--', lw=2.5, label=f"Client N°{id} : {value_client}")
+        plt.legend(loc='upper right')
+        plt.show()
+    plot.map(specs, feature)
 
 #-------------------------------------------------------------------------------------------------------------------------------------------
 st.set_page_config(
@@ -169,6 +183,16 @@ if not df.empty :
                                 font={'color': 'black', 'family': 'Calibri'},
                                 margin=dict(l=0, r=0, b=0, t=0, pad=0))
         st.plotly_chart(fig, use_container_width=True)
+
+        # if st.checkbox('**Comparer le client avec les autres clients**'):
+        #     feature_name = st.selectbox('Sélectionner un paramètre :', [
+        #         "AMT_INCOME_TOTAL",
+        #         "DAYS_EMPLOYED",
+        #         "REGION_POPULATION_RELATIVE",
+        #         "DAYS_BIRTH",
+        #         "AMT_CREDIT"])
+        #     comparison_chart(df=df, id=id_client, feature=feature_name)
+            
 
     #======================#
     # Analyse des Features #
