@@ -38,3 +38,9 @@ streamlit run .\LY_France_Dashboard_112024.py
 ```
 
 API de prédiction disponible à cet URL : https://scoringapi-ewckf3cxfrdbadhw.northeurope-01.azurewebsites.net
+
+- Pour lancer l'API en local
+```
+fastapi dev .\LY_France_API_112024.py
+```
+  
